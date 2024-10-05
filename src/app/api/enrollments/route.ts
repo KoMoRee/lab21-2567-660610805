@@ -80,7 +80,41 @@ export const POST = async (request: NextRequest) => {
     );
   }
 
-  // Coding in lecture
+  const prisma = getPrisma();
+  const theCourse = await prisma.course.findFirst({
+    where: {courseNo: courseNo}
+  });
+
+  if(!theCourse) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: 'Course number does not exist.',
+      },{status: 404}
+    );
+  }
+
+  const theEnrollment = await prisma.enrollment.findFirst({
+    where: {courseNo_studentId:{courseNo: courseNo, studentId: studentId}}
+  });
+
+  if(theEnrollment) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "You've alr eady registered this course."
+      },{status: 400}
+    );
+  }
+
+  await prisma.enrollment.create(
+    {
+      data: {
+        courseNo: courseNo,
+        studentId: studentId
+      }
+    }
+  );
 
   return NextResponse.json({
     ok: true,
